@@ -10,10 +10,18 @@ type Bot interface {
 	Connect() int
 }
 
+type command interface {
+	Authorize(int) bool
+	Execute(int, []string) (string, error)
+}
+
 // implements Bot
 type navi struct {
-	session	*discordgo.Session
-	quit	chan int
+	ID		string
+	session		*discordgo.Session
+	commands	map[string]command
+	permissions	map[string]int
+	quit		chan int
 }
 
 func (self *navi) Connect() int {
@@ -51,7 +59,10 @@ func New(token string) (Bot, error) {
 
 	// initialize bot 
 	bot := &navi{
-		quit:	make(chan int)}
+		commands:	make(map[string]command),
+		permissions:	make(map[string]int),
+		quit:		make(chan int)}
+
 	// create discord session
 	bot.session, err = discordgo.New("Bot " + token)
 	if err != nil {
