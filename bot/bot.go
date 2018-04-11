@@ -11,8 +11,7 @@ type Bot interface {
 }
 
 type command interface {
-	Authorize(int) bool
-	Execute(discordgo.User, int, []string) (string, error)
+	Execute(*navi, *discordgo.User, int, []string) (string, error)
 }
 
 // implements Bot

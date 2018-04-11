@@ -48,15 +48,10 @@ func (self *navi) parseMessage(message *discordgo.Message) {
 	// in any message prefixed with our commandPrefix
 	if cmd, ok := self.commands[argv[0]]; ok {
 		// ensure the user has permission to run this command
-		authLevel, ok := self.permissions[message.Author.ID]
-		if ok && cmd.Authorize(authLevel) {
-			response, err = cmd.Execute(message.Author, argc, argv)
-			if err != nil {
-				common.Log("error during %v: %v", argv[0], err)
-				response = "An error occured during the execution of that command. Please let bulb know."
-			}
-		} else {
-			response = "**Insufficient Permissions**"
+		response, err = cmd.Execute(self, message.Author, argc, argv)
+		if err != nil {
+			common.Log("error during %v: %v", argv[0], err)
+			response = "An error occured during the execution of that command. Please let bulb know."
 		}
 	} else { // was not found in our commands hashmap
 		response = fmt.Sprintf("`%v` is not a valid command...", argv[0])
