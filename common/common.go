@@ -27,7 +27,7 @@ var Config map[string]interface{}
 
 var silent		= flag.Bool("s", false, "silent: surpress all output")
 var verbose		= flag.Bool("v", true, "verbose: print debug output")
-var configLocation	= flag.String("f", "config.json", "config-file: path to configuration")
+var configLocation	= flag.String("f", "/etc/navi.conf", "config-file: path to configuration")
 
 // config
 func loadFile(fileName string) (map[string]interface{}, error) {
