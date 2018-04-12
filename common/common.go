@@ -14,8 +14,7 @@ func init() {
 	flag.Parse()
 	Args = flag.Args()
 
-	var err error
-	Config, err = loadFile(*configLocation)
+	err := LoadConfig()
 	if err != nil {
 		Fatal("common.init(): %v", err)
 	}
@@ -30,18 +29,19 @@ var verbose		= flag.Bool("v", true, "verbose: print debug output")
 var configLocation	= flag.String("f", "/etc/navi.conf", "config-file: path to configuration")
 
 // config
-func loadFile(fileName string) (map[string]interface{}, error) {
-	file, err := ioutil.ReadFile(fileName)
+func LoadConfig() error {
+	file, err := ioutil.ReadFile(*configLocation)
 	if err != nil {
-		return nil, err
+		return err
 	}
 
 	var jsonData interface{}
 	err = json.Unmarshal(file, &jsonData)
 	if err != nil {
-		return nil, err
+		return err
 	}
-	return jsonData.(map[string]interface{}), nil
+	Config = jsonData.(map[string]interface{})
+	return nil
 }
 
 // makes error handling a little sexier

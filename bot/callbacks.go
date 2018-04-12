@@ -10,24 +10,24 @@ import (
 const commandPrefix = byte('.')
 
 // actual callbacks
-func (self *navi) ready(s *discordgo.Session, r *discordgo.Ready) {
+func (self *Bot) ready(s *discordgo.Session, r *discordgo.Ready) {
 	common.Log("Got ready event!")
 	self.ID = r.User.ID
 }
 
-func (self *navi) messageCreate(s *discordgo.Session, m *discordgo.MessageCreate) {
+func (self *Bot) messageCreate(s *discordgo.Session, m *discordgo.MessageCreate) {
 	if m.ID == self.ID { return }
 	self.parseMessage(m.Message)
 }
 
 // other bot methods
-func (self *navi) sendMessage(channelID string, message string) {
+func (self *Bot) sendMessage(channelID string, message string) {
 	self.session.ChannelTyping(channelID)
 	time.Sleep(500 * time.Millisecond)
 	self.session.ChannelMessageSend(channelID, message)
 }
 
-func (self *navi) parseMessage(message *discordgo.Message) {
+func (self *Bot) parseMessage(message *discordgo.Message) {
 	msg := message.Content
 
 	// one character messages can't be commands
@@ -48,7 +48,7 @@ func (self *navi) parseMessage(message *discordgo.Message) {
 	// in any message prefixed with our commandPrefix
 	if cmd, ok := self.commands[argv[0]]; ok {
 		// ensure the user has permission to run this command
-		response, err = cmd.Execute(self, message.Author, argc, argv)
+		response, err = cmd(self, message.Author, argc, argv)
 		if err != nil {
 			common.Log("error during %v: %v", argv[0], err)
 			response = "An error occured during the execution of that command. Please let bulb know."
@@ -60,7 +60,7 @@ func (self *navi) parseMessage(message *discordgo.Message) {
 	go self.sendMessage(message.ChannelID, response)
 }
 
-func (self *navi) onShutdown() int {
+func (self *Bot) onShutdown() int {
 	common.Log("cleaing up")
 	return 0
 }
