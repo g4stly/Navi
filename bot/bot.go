@@ -10,9 +10,7 @@ type Bot interface {
 	Connect() int
 }
 
-type command interface {
-	Execute(*navi, *discordgo.User, int, []string) (string, error)
-}
+type command func(*navi, *discordgo.User, int, []string) (string, error)
 
 // implements Bot
 type navi struct {
