@@ -16,7 +16,7 @@ func (self *Bot) ready(s *discordgo.Session, r *discordgo.Ready) {
 }
 
 func (self *Bot) messageCreate(s *discordgo.Session, m *discordgo.MessageCreate) {
-	if m.ID == self.ID { return }
+	if m.Author.ID == self.ID && !self.Combo { return }
 	self.parseMessage(m.Message)
 }
 
@@ -46,9 +46,8 @@ func (self *Bot) parseMessage(message *discordgo.Message) {
 
 	// look up a command named the first word
 	// in any message prefixed with our commandPrefix
-	if cmd, ok := self.commands[argv[0]]; ok {
-		// ensure the user has permission to run this command
-		response, err = cmd(self, message.Author, argc, argv)
+	if cmd, ok := self.Commands[argv[0]]; ok {
+		response, err = cmd.Execute(self, message.Author, argc, argv)
 		if err != nil {
 			common.Log("error during %v: %v", argv[0], err)
 			response = "An error occured during the execution of that command. Please let bulb know."

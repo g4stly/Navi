@@ -9,22 +9,34 @@ import (
 )
 
 
+// types
 type Bot struct {
 	ID		string
+	Combo		bool
 	session		*discordgo.Session
-	commands	map[string]Command
+	Commands	map[string]Command
 	modules		[]Module
-	enabledModules	map[string]bool
-	permissions	map[string]int
+	EnabledModules	map[string]bool
+	Permissions	map[string]bool
 	Quit		chan int
 }
 
-type Command func(*Bot, *discordgo.User, int, []string) (string, error)
-type Module struct {
-	Name		string
-	Commands	map[string]Command
+//type Command func(*Bot, *discordgo.User, int, []string) (string, error)
+type Command interface {
+	Names() []string
+	Usage(string) string
+	Execute(*Bot, *discordgo.User, int, []string) (string, error)
 }
 
+type Module struct {
+	Name		string
+	Commands	[]Command
+}
+
+// variables
+var ErrNotAuthorized = "**You aren't authorized to execute that command!**"
+
+// methods for Bot type
 func (self *Bot) loadModules() error {
 	modules := common.Config["modules"].([]interface{})
 	for _, moduleName := range modules {
@@ -48,7 +60,7 @@ func (self *Bot) loadModule(moduleName string) error {
 
 	module := initialize.(func()Module)()
 	self.modules = append(self.modules, module)
-	self.enabledModules[module.Name] = true
+	self.EnabledModules[module.Name] = true
 
 	return nil
 }
@@ -56,44 +68,14 @@ func (self *Bot) loadModule(moduleName string) error {
 func (self *Bot) loadCommands() {
 	for _, module := range self.modules {
 		common.Log("loading commands for module: %v", module.Name)
-		if !self.enabledModules[module.Name] { continue }
-		for name, command := range module.Commands {
-			common.Log("\t\tloading %v...", name)
-			self.commands[name] = command
+		if !self.EnabledModules[module.Name] { continue }
+		for _, command := range module.Commands {
+			for _, name := range command.Names() {
+				common.Log("\t\tloading %v...", name)
+				self.Commands[name] = command
+			}
 		}
 	}
-}
-
-func (self *Bot) ReloadModules() error {
-	common.Log("attepmting to hot load modules")
-
-	// reload config file
-	err := common.LoadConfig()
-	if err != nil { return err }
-
-	// loop over names of modules
-	modules := common.Config["modules"].([]interface{})
-	for moduleIndex, moduleName := range modules {
-		common.Log("loading module: %v", moduleName.(string))
-
-		// check to see if it's already loaded
-		if _, ok := self.enabledModules[moduleName.(string)]; ok {
-			// if so, delete it first
-			delete(self.enabledModules, moduleName.(string))
-			self.modules = append(self.modules[:moduleIndex], self.modules[moduleIndex+1:]...)
-		}
-
-		err = self.loadModule(moduleName.(string))
-		if err != nil { return err }
-		common.Log("done")
-	}
-	// delete all loaded commands
-	for name := range self.commands {
-		delete(self.commands, name)
-	}
-	// finally reload commands
-	self.loadCommands()
-	return nil
 }
 
 func (self *Bot) Connect() int {
@@ -125,15 +107,17 @@ func (self *Bot) waitForQuit() int {
 	}
 }
 
+// main exported function, initializes and returns a Bot type
 func New(token string) (*Bot, error) {
 	common.Log("Initializing bot...")
 	var err error
 
 	// initialize bot 
 	bot := &Bot{
-		commands:	make(map[string]Command),
-		enabledModules:	make(map[string]bool),
-		permissions:	make(map[string]int),
+		Combo:		false,
+		Commands:	make(map[string]Command),
+		EnabledModules:	make(map[string]bool),
+		Permissions:	make(map[string]bool),
 		Quit:		make(chan int)}
 
 	// load modules
