@@ -11,13 +11,14 @@ import (
 
 // types
 type Bot struct {
+	session		*discordgo.Session
 	ID		string
 	Combo		bool
-	session		*discordgo.Session
 	Commands	map[string]Command
-	modules		[]Module
+	Database	database	// (defined in database.go)
+	Modules		[]Module
 	EnabledModules	map[string]bool
-	Permissions	map[string]bool
+	Permissions	map[string]int
 	Quit		chan int
 }
 
@@ -38,8 +39,8 @@ var ErrNotAuthorized = "**You aren't authorized to execute that command!**"
 
 // methods for Bot type
 func (self *Bot) loadModules() error {
-	modules := common.Config["modules"].([]interface{})
-	for _, moduleName := range modules {
+	Modules := common.Config["modules"].([]interface{})
+	for _, moduleName := range Modules {
 		common.Log("loading module: %v", moduleName.(string))
 
 		err := self.loadModule(moduleName.(string))
@@ -59,14 +60,14 @@ func (self *Bot) loadModule(moduleName string) error {
 	if err != nil { return err }
 
 	module := initialize.(func()Module)()
-	self.modules = append(self.modules, module)
+	self.Modules = append(self.Modules, module)
 	self.EnabledModules[module.Name] = true
 
 	return nil
 }
 
-func (self *Bot) loadCommands() {
-	for _, module := range self.modules {
+func (self *Bot) ReloadCommands() {
+	for _, module := range self.Modules {
 		common.Log("loading commands for module: %v", module.Name)
 		if !self.EnabledModules[module.Name] { continue }
 		for _, command := range module.Commands {
@@ -76,6 +77,33 @@ func (self *Bot) loadCommands() {
 			}
 		}
 	}
+}
+
+func (self *Bot) loadPermissions() {
+	common.Log("Loading permissions from database...")
+	rows, err := self.Database.query("SELECT userID, level FROM permissions;")
+	if err != nil {
+		common.Fatal("loadPermissions(): %v", err)
+	}
+
+	for rows.Next() {
+		var userID string
+		var level int
+		rows.Scan(&userID, &level)
+		self.Permissions[userID] = level
+	}
+	common.Log("done.")
+}
+func (self *Bot) savePermissions() {
+	common.Log("Saving permissions into database...")
+	commandString := "REPLACE INTO permissions (userID, level) VALUES ('?', '?');"
+	for userID, level := range self.Permissions {
+		_, err := self.Database.exec(commandString, userID, level)
+		if err != nil {
+			common.Fatal("savePermissions(): %v", err)
+		}
+	}
+	common.Log("done.")
 }
 
 func (self *Bot) Connect() int {
@@ -117,15 +145,21 @@ func New(token string) (*Bot, error) {
 		Combo:		false,
 		Commands:	make(map[string]Command),
 		EnabledModules:	make(map[string]bool),
-		Permissions:	make(map[string]bool),
+		Permissions:	make(map[string]int),
 		Quit:		make(chan int)}
+
+	// initialize database
+	err = bot.Database.startup(config["database-location"].(string))
+
+	// grab permissions from database
+	bot.loadPermissions()
 
 	// load modules
 	err = bot.loadModules()
 	if err != nil {
 		common.Fatal("failed to load module: %v", err)
 	}
-	bot.loadCommands()
+	bot.ReloadCommands()
 
 	// create discord session
 	bot.session, err = discordgo.New("Bot " + token)

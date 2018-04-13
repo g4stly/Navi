@@ -56,11 +56,12 @@ func (self *Bot) parseMessage(message *discordgo.Message) {
 		response = fmt.Sprintf("`%v` is not a valid command...", argv[0])
 	}
 
+	common.Log("\tresponse: %v", response)
 	go self.sendMessage(message.ChannelID, response)
 }
 
 func (self *Bot) onShutdown() int {
-	common.Log("cleaing up")
+	self.Database.savePermissions()
 	return 0
 }
 
