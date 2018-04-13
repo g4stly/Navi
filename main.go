@@ -1,9 +1,9 @@
 package main
 
 import (
-	"os"
 	"github.com/g4stly/navi/bot"
 	"github.com/g4stly/navi/common"
+	"os"
 )
 
 func main() {

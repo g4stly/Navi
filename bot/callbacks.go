@@ -2,9 +2,9 @@ package bot
 
 import (
 	"fmt"
-	"time"
-	"github.com/g4stly/navi/common"
 	"github.com/bwmarrin/discordgo"
+	"github.com/g4stly/navi/common"
+	"time"
 )
 
 const commandPrefix = byte('.')
@@ -16,7 +16,9 @@ func (self *Bot) ready(s *discordgo.Session, r *discordgo.Ready) {
 }
 
 func (self *Bot) messageCreate(s *discordgo.Session, m *discordgo.MessageCreate) {
-	if m.Author.ID == self.ID && !self.Combo { return }
+	if m.Author.ID == self.ID && !self.Combo {
+		return
+	}
 	self.parseMessage(m.Message)
 }
 
@@ -31,11 +33,17 @@ func (self *Bot) parseMessage(message *discordgo.Message) {
 	msg := message.Content
 
 	// one character messages can't be commands
-	if len(msg) < 2 { return }
+	if len(msg) < 2 {
+		return
+	}
 
 	// assert first character is the command prefix, and the second character is not
-	if msg[0] != commandPrefix { return }
-	if msg[1] == commandPrefix { return }
+	if msg[0] != commandPrefix {
+		return
+	}
+	if msg[1] == commandPrefix {
+		return
+	}
 
 	var err error
 	var response string
@@ -61,7 +69,7 @@ func (self *Bot) parseMessage(message *discordgo.Message) {
 }
 
 func (self *Bot) onShutdown() int {
-	self.Database.savePermissions()
+	self.savePermissions()
 	return 0
 }
 
@@ -87,7 +95,9 @@ func parseArguments(commandString string) (int, []string) {
 				start = i
 				// while the current character isn't closing quotes
 				// or escaped with a forwardslash increment i
-				for i < length && (commandString[i] != '"' || commandString[i-1] == '\\') { i++ }
+				for i < length && (commandString[i] != '"' || commandString[i-1] == '\\') {
+					i++
+				}
 				if commandString[i-1] == '\\' {
 					end = i - 1
 				} else {
@@ -96,7 +106,9 @@ func parseArguments(commandString string) (int, []string) {
 			} else {
 				start = i
 				i++
-				for i < length && !isSpace(commandString[i]) && (commandString[i] != '"' || commandString[i - 1] == '\\') { i++ }
+				for i < length && !isSpace(commandString[i]) && (commandString[i] != '"' || commandString[i-1] == '\\') {
+					i++
+				}
 				end = i
 			}
 			argv = append(argv, commandString[start:end])

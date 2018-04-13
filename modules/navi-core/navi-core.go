@@ -1,20 +1,21 @@
 package main
 
 import (
-	"fmt"
 	"bytes"
-	"strings"
-	"strconv"
+	"fmt"
 	"github.com/bwmarrin/discordgo"
 	"github.com/g4stly/navi/bot"
+	"github.com/g4stly/navi/common"
+	"strconv"
+	"strings"
 )
 
 const MODULE_NAME = "navi-core"
 
 // core command type
 type coreCommand struct {
-	names	func()[]string
-	usage	func(string)string
+	names   func() []string
+	usage   func(string) string
 	execute func(*bot.Bot, *discordgo.User, int, []string) (string, error)
 }
 
@@ -45,7 +46,7 @@ func echoExec(navi *bot.Bot, author *discordgo.User, argc int, argv []string) (s
 
 // list command
 func listNames() []string {
-	return []string{"list","ls","commands"}
+	return []string{"list", "ls", "commands"}
 }
 
 func listUsage(nameUsed string) string {
@@ -57,9 +58,13 @@ func listExec(navi *bot.Bot, author *discordgo.User, argc int, argv []string) (s
 	// loop over modules first
 	for modIndex := range navi.Modules {
 		// if it's disabled, skip it
-		if !navi.EnabledModules[navi.Modules[modIndex].Name] { continue }
+		if !navi.EnabledModules[navi.Modules[modIndex].Name] {
+			continue
+		}
 		_, err := response.WriteString(navi.Modules[modIndex].Name)
-		if err != nil { return "", err }
+		if err != nil {
+			return "", err
+		}
 		// now loop over commands in module
 		for _, cmd := range navi.Modules[modIndex].Commands {
 			// print all aliases of a command
@@ -68,12 +73,16 @@ func listExec(navi *bot.Bot, author *discordgo.User, argc int, argv []string) (s
 			for _, cmdName := range names {
 				if first { // decided to print comma or indent
 					_, err = response.WriteString(fmt.Sprintf("\n\t`.%v`", cmdName))
-					if err != nil { return "", err }
+					if err != nil {
+						return "", err
+					}
 					first = false
 					continue
 				}
 				_, err = response.WriteString(fmt.Sprintf(" `.%v`", cmdName))
-				if err != nil { return "", err }
+				if err != nil {
+					return "", err
+				}
 			}
 		}
 	}
@@ -82,7 +91,7 @@ func listExec(navi *bot.Bot, author *discordgo.User, argc int, argv []string) (s
 
 // usage command
 func usageNames() []string {
-	return []string{"usage","help"}
+	return []string{"usage", "help"}
 }
 
 func usageUsage(nameUsed string) string {
@@ -139,7 +148,9 @@ func comboUsage(nameUsed string) string {
 func comboExec(navi *bot.Bot, author *discordgo.User, argc int, argv []string) (string, error) {
 	mode := "disabled"
 	navi.Combo = !navi.Combo
-	if navi.Combo { mode = "enabled" }
+	if navi.Combo {
+		mode = "enabled"
+	}
 	return fmt.Sprintf("Combo mode has been %v.", mode), nil
 }
 
@@ -162,13 +173,11 @@ func isMention(mention string) bool {
 }
 
 func mentionToID(mention string) string {
-	return mention[1:]
+	common.Log(mention[2 : len(mention)-1])
+	return mention[2 : len(mention)-1]
 }
 
 func authorizeExec(navi *bot.Bot, author *discordgo.User, argc int, argv []string) (string, error) {
-	if navi.Permissions[author.ID] < 2 {
-		return bot.ErrNotAuthorized, nil
-	}
 	if argc < 2 {
 		return fmt.Sprintf("You have a permission level of %v.", navi.Permissions[author.ID]), nil
 	} else if argc < 3 {
@@ -178,12 +187,19 @@ func authorizeExec(navi *bot.Bot, author *discordgo.User, argc int, argv []strin
 		return fmt.Sprintf("%v has a permission level of %v.", argv[1], navi.Permissions[mentionToID(argv[1])]), nil
 	}
 	// protection cases
+	if navi.Permissions[author.ID] < 2 {
+		return bot.ErrNotAuthorized, nil
+	}
 	if navi.Permissions[author.ID] <= navi.Permissions[mentionToID(argv[1])] {
 		return fmt.Sprintf("**You cannot modify the permission level of someone with greater or equal permissions.**"), nil
 	}
 	newLevel, err := strconv.Atoi(argv[2])
-	if err != nil { return "", err }
-	if newLevel < 0 { newLevel = 0 }
+	if err != nil {
+		return "", err
+	}
+	if newLevel < 0 {
+		newLevel = 0
+	}
 	if newLevel > navi.Permissions[author.ID] {
 		return fmt.Sprintf("**You cannot set a users permission level higher than your own.**"), nil
 	}
@@ -194,7 +210,7 @@ func authorizeExec(navi *bot.Bot, author *discordgo.User, argc int, argv []strin
 
 // quit command
 func quitNames() []string {
-	return []string{"quit","exit","restart","goodbye","fuckoff"}
+	return []string{"quit", "exit", "restart", "goodbye", "fuckoff"}
 }
 
 func quitUsage(nameUsed string) string {
@@ -213,33 +229,33 @@ func Init() bot.Module {
 	var module bot.Module
 	module.Name = MODULE_NAME
 	module.Commands = []bot.Command{
-		&coreCommand{	// echo
-			names:echoNames,
-			usage:echoUsage,
-			execute:echoExec},
-		&coreCommand{	// list
-			names:listNames,
-			usage:listUsage,
-			execute:listExec},
-		&coreCommand{	// usage
-			names:usageNames,
-			usage:usageUsage,
-			execute:usageExec},
-		&coreCommand{	// modToggle
-			names:modToggleNames,
-			usage:modToggleUsage,
-			execute:modToggleExec},
-		&coreCommand{	// authorize
-			names:authorizeNames,
-			usage:authorizeUsage,
-			execute:authorizeExec},
-		&coreCommand{	// combo
-			names:comboNames,
-			usage:comboUsage,
-			execute:comboExec},
-		&coreCommand{	// quit
-			names:quitNames,
-			usage:quitUsage,
-			execute:quitExec}}
+		&coreCommand{ // echo
+			names:   echoNames,
+			usage:   echoUsage,
+			execute: echoExec},
+		&coreCommand{ // list
+			names:   listNames,
+			usage:   listUsage,
+			execute: listExec},
+		&coreCommand{ // usage
+			names:   usageNames,
+			usage:   usageUsage,
+			execute: usageExec},
+		&coreCommand{ // modToggle
+			names:   modToggleNames,
+			usage:   modToggleUsage,
+			execute: modToggleExec},
+		&coreCommand{ // authorize
+			names:   authorizeNames,
+			usage:   authorizeUsage,
+			execute: authorizeExec},
+		&coreCommand{ // combo
+			names:   comboNames,
+			usage:   comboUsage,
+			execute: comboExec},
+		&coreCommand{ // quit
+			names:   quitNames,
+			usage:   quitUsage,
+			execute: quitExec}}
 	return module
 }

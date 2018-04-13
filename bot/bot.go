@@ -2,24 +2,23 @@ package bot
 
 import (
 	"fmt"
-	"time"
-	"plugin"
 	"github.com/bwmarrin/discordgo"
 	"github.com/g4stly/navi/common"
+	"plugin"
+	"time"
 )
-
 
 // types
 type Bot struct {
-	session		*discordgo.Session
-	ID		string
-	Combo		bool
-	Commands	map[string]Command
-	Database	database	// (defined in database.go)
-	Modules		[]Module
-	EnabledModules	map[string]bool
-	Permissions	map[string]int
-	Quit		chan int
+	session        *discordgo.Session
+	ID             string
+	Combo          bool
+	Commands       map[string]Command
+	Database       database // (defined in database.go)
+	Modules        []Module
+	EnabledModules map[string]bool
+	Permissions    map[string]int
+	Quit           chan int
 }
 
 //type Command func(*Bot, *discordgo.User, int, []string) (string, error)
@@ -30,8 +29,8 @@ type Command interface {
 }
 
 type Module struct {
-	Name		string
-	Commands	[]Command
+	Name     string
+	Commands []Command
 }
 
 // variables
@@ -44,7 +43,9 @@ func (self *Bot) loadModules() error {
 		common.Log("loading module: %v", moduleName.(string))
 
 		err := self.loadModule(moduleName.(string))
-		if err != nil { return err }
+		if err != nil {
+			return err
+		}
 
 		common.Log("done")
 	}
@@ -54,12 +55,16 @@ func (self *Bot) loadModules() error {
 func (self *Bot) loadModule(moduleName string) error {
 	moduleLocation := fmt.Sprintf("modules/%v/%v.so", moduleName, moduleName)
 	moduleLibrary, err := plugin.Open(moduleLocation)
-	if err != nil { return err }
+	if err != nil {
+		return err
+	}
 
 	initialize, err := moduleLibrary.Lookup("Init")
-	if err != nil { return err }
+	if err != nil {
+		return err
+	}
 
-	module := initialize.(func()Module)()
+	module := initialize.(func() Module)()
 	self.Modules = append(self.Modules, module)
 	self.EnabledModules[module.Name] = true
 
@@ -69,7 +74,9 @@ func (self *Bot) loadModule(moduleName string) error {
 func (self *Bot) ReloadCommands() {
 	for _, module := range self.Modules {
 		common.Log("loading commands for module: %v", module.Name)
-		if !self.EnabledModules[module.Name] { continue }
+		if !self.EnabledModules[module.Name] {
+			continue
+		}
 		for _, command := range module.Commands {
 			for _, name := range command.Names() {
 				common.Log("\t\tloading %v...", name)
@@ -127,10 +134,10 @@ func (self *Bot) waitForQuit() int {
 			common.Log("Gracefully shutting down")
 			resultCode := self.onShutdown()
 			common.Log("Done")
-			return resultCode;
+			return resultCode
 		default:
-			time.Sleep(500*time.Millisecond)
-			break;
+			time.Sleep(500 * time.Millisecond)
+			break
 		}
 	}
 }
@@ -140,16 +147,16 @@ func New(token string) (*Bot, error) {
 	common.Log("Initializing bot...")
 	var err error
 
-	// initialize bot 
+	// initialize bot
 	bot := &Bot{
-		Combo:		false,
-		Commands:	make(map[string]Command),
-		EnabledModules:	make(map[string]bool),
-		Permissions:	make(map[string]int),
-		Quit:		make(chan int)}
+		Combo:          false,
+		Commands:       make(map[string]Command),
+		EnabledModules: make(map[string]bool),
+		Permissions:    make(map[string]int),
+		Quit:           make(chan int)}
 
 	// initialize database
-	err = bot.Database.startup(config["database-location"].(string))
+	err = bot.Database.startup(common.Config["database-location"].(string))
 
 	// grab permissions from database
 	bot.loadPermissions()
@@ -172,5 +179,5 @@ func New(token string) (*Bot, error) {
 	bot.session.AddHandler(bot.messageCreate)
 
 	common.Log("Done")
-	return bot, err;
+	return bot, err
 }

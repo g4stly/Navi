@@ -1,13 +1,13 @@
 package common
 
 import (
+	"encoding/json"
+	"errors"
 	"flag"
 	"fmt"
 	"io"
-	"os"
 	"io/ioutil"
-	"errors"
-	"encoding/json"
+	"os"
 )
 
 func init() {
@@ -24,9 +24,9 @@ func init() {
 var Args []string
 var Config map[string]interface{}
 
-var silent		= flag.Bool("s", false, "silent: surpress all output")
-var verbose		= flag.Bool("v", true, "verbose: print debug output")
-var configLocation	= flag.String("f", "/etc/navi.conf", "config-file: path to configuration")
+var silent = flag.Bool("s", false, "silent: surpress all output")
+var verbose = flag.Bool("v", true, "verbose: print debug output")
+var configLocation = flag.String("f", "/etc/navi.conf", "config-file: path to configuration")
 
 // config
 func LoadConfig() error {
@@ -51,7 +51,9 @@ func NewError(fmtstring string, err error) error {
 
 // logging
 func msg(w io.Writer, badge string, fmtstring string, args ...interface{}) {
-	if *silent { return }
+	if *silent {
+		return
+	}
 
 	if len(args) < 1 {
 		w.Write([]byte(fmt.Sprintf("%v: %v\n", badge, fmtstring)))
@@ -63,7 +65,9 @@ func msg(w io.Writer, badge string, fmtstring string, args ...interface{}) {
 
 // for debug only output
 func Log(fmtstring string, args ...interface{}) {
-	if !*verbose { return }
+	if !*verbose {
+		return
+	}
 	msg(os.Stdout, "DEBUG", fmtstring, args...)
 }
 
@@ -82,13 +86,3 @@ func Fatal(fmtstring string, args ...interface{}) {
 	msg(os.Stderr, "FATAL", fmtstring, args...)
 	os.Exit(-1)
 }
-
-
-
-
-
-
-
-
-
-

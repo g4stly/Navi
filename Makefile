@@ -1,11 +1,13 @@
 TARGET 	= main
-MODULES	= modules/navi-core/navi-core.so
+BOT	= bot/bot.go bot/callbacks.go bot/database.go
+CORE	= modules/navi-core/navi-core.so
+MODULES	= $(CORE)
 
 all: $(TARGET) $(MODULES)
 
-$(TARGET): common/common.go bot/bot.go bot/callbacks.go main.go
+$(TARGET): common/common.go $(BOT)
 	go build main.go
-%.so: bot/bot.go bot/callbacks.go
+$(CORE): $(CORE:%.so=%.go) $(BOT)
 	go build -buildmode=plugin -o $@ $(@:%.so=%.go)
 
 .PHONY: clean test
