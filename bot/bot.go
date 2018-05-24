@@ -17,6 +17,7 @@ type Bot struct {
 	Database       database // (defined in database.go)
 	Modules        []Module
 	EnabledModules map[string]bool
+	moduleCleanup  []func(*Bot)error
 	Permissions    map[string]int
 	Quit           chan int
 }
@@ -63,15 +64,23 @@ func (self *Bot) loadModule(moduleName string) error {
 	if err != nil {
 		return err
 	}
+	cleanup, err := moduleLibrary.Lookup("Cleanup")
+	if err != nil {
+		return err
+	}
 
-	module := initialize.(func() Module)()
+	module := initialize.(func(*Bot) Module)(self)
 	self.Modules = append(self.Modules, module)
 	self.EnabledModules[module.Name] = true
+	self.moduleCleanup = append(self.moduleCleanup, cleanup.(func(*Bot) error))
 
 	return nil
 }
 
 func (self *Bot) ReloadCommands() {
+	for key := range self.Commands {
+		delete(self.Commands, key)
+	}
 	for _, module := range self.Modules {
 		common.Log("loading commands for module: %v", module.Name)
 		if !self.EnabledModules[module.Name] {

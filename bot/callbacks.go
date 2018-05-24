@@ -70,6 +70,13 @@ func (self *Bot) parseMessage(message *discordgo.Message) {
 
 func (self *Bot) onShutdown() int {
 	self.savePermissions()
+	for index := range self.moduleCleanup {
+		// call each modules destructor
+		err := self.moduleCleanup[index](self)
+		if err != nil {
+			common.Log("moduleCleanup(): ", err)
+		}
+	}
 	return 0
 }
 

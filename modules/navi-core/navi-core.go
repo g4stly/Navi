@@ -5,7 +5,6 @@ import (
 	"fmt"
 	"github.com/bwmarrin/discordgo"
 	"github.com/g4stly/navi/bot"
-	"github.com/g4stly/navi/common"
 	"strconv"
 	"strings"
 )
@@ -173,7 +172,6 @@ func isMention(mention string) bool {
 }
 
 func mentionToID(mention string) string {
-	common.Log(mention[2 : len(mention)-1])
 	return mention[2 : len(mention)-1]
 }
 
@@ -225,7 +223,7 @@ func quitExec(navi *bot.Bot, author *discordgo.User, argc int, argv []string) (s
 	return "baibai~~", nil
 }
 
-func Init() bot.Module {
+func Init(navi *bot.Bot) bot.Module {
 	var module bot.Module
 	module.Name = MODULE_NAME
 	module.Commands = []bot.Command{
@@ -258,4 +256,8 @@ func Init() bot.Module {
 			usage:   quitUsage,
 			execute: quitExec}}
 	return module
+}
+
+func Cleanup(navi *bot.Bot) error {
+	return nil
 }

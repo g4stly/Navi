@@ -5,6 +5,7 @@ import (
 	"errors"
 	"fmt"
 	_ "github.com/mattn/go-sqlite3"
+	"github.com/g4stly/navi/common"
 )
 
 type database struct {
@@ -53,4 +54,40 @@ func (self *database) exec(commandString string, args ...interface{}) (sql.Resul
 	defer db.Close()
 
 	return db.Exec(commandString, args...)
+}
+
+func (self *database) LoadSlice(tableName string) ([]string, error) {
+	db, err := self.open()
+	if err != nil {
+		return nil, err
+	}
+	defer db.Close()
+
+	var list []string
+	commandString := fmt.Sprintf("SELECT value FROM %v;", tableName)
+	rows, err := self.query(commandString)
+	if err != nil {
+		return nil, err
+	}
+
+	for rows.Next() {
+		var listItem string
+		rows.Scan(&listItem)
+		list = append(list, listItem)
+	}
+
+	return list, nil
+}
+
+func (self *database) SaveSlice(tableName string, slice []string) (error) {
+	commandString := fmt.Sprintf("REPLACE INTO %v (value) VALUES ('?');", tableName)
+	for index := range slice {
+		common.Log("sending %v to self.exec()", slice[index])
+		_, err := self.exec(commandString, []string{slice[index]})
+		if err != nil {
+			return err
+		}
+	}
+
+	return nil
 }
