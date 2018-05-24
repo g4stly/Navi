@@ -84,6 +84,10 @@ func listExec(navi *bot.Bot, author *discordgo.User, argc int, argv []string) (s
 				}
 			}
 		}
+		_, err = response.WriteString("\n")
+		if err != nil {
+			return "", err
+		}
 	}
 	return response.String(), nil
 }
@@ -208,7 +212,7 @@ func authorizeExec(navi *bot.Bot, author *discordgo.User, argc int, argv []strin
 
 // quit command
 func quitNames() []string {
-	return []string{"quit", "exit", "restart", "goodbye", "fuckoff"}
+	return []string{"quit", "exit", "restart", "fuckoff"}
 }
 
 func quitUsage(nameUsed string) string {
