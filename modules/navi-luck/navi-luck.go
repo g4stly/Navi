@@ -74,12 +74,12 @@ func chooseExec(navi *bot.Bot, author *discordgo.User, argc int, argv []string) 
 
 	index := 0
 	for i := 1; i < argc; i++ {
-		for key, word := range perspective {
-			if argv[i] == key {
-				argv[i] = word
-				break
-			}
+		replacement, ok := perspective[argv[i]]
+		if !ok {
+			continue
 		}
+		argv[i] = replacement
+
 		if argv[i] == "or" {
 			index = i
 		}
