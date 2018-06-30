@@ -57,11 +57,7 @@ func (self *database) exec(commandString string, args ...interface{}) (sql.Resul
 }
 
 func (self *database) LoadSlice(tableName string) ([]string, error) {
-	db, err := self.open()
-	if err != nil {
-		return nil, err
-	}
-	defer db.Close()
+	common.Log("loading slice %v", tableName);
 
 	var list []string
 	commandString := fmt.Sprintf("SELECT value FROM %v;", tableName)
@@ -75,15 +71,16 @@ func (self *database) LoadSlice(tableName string) ([]string, error) {
 		rows.Scan(&listItem)
 		list = append(list, listItem)
 	}
+	common.Log("got a slice %v items long", len(list));
 
 	return list, nil
 }
 
 func (self *database) SaveSlice(tableName string, slice []string) (error) {
-	commandString := fmt.Sprintf("REPLACE INTO %v (value) VALUES ('?');", tableName)
+	common.Log("saving slice %v", tableName)
 	for index := range slice {
-		common.Log("sending %v to self.exec()", slice[index])
-		_, err := self.exec(commandString, []string{slice[index]})
+		commandString := fmt.Sprintf("REPLACE INTO %v (value) VALUES ('%v');", tableName, slice[index])
+		_, err := self.exec(commandString)
 		if err != nil {
 			return err
 		}
