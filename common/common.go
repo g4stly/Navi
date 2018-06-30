@@ -81,6 +81,14 @@ func Usage(fmtstring string, args ...interface{}) {
 	msg(os.Stdout, "usage", fmtstring, args...)
 }
 
+// error msg
+func Error(fmtstring string, args ...interface{}) {
+	if !*verbose {
+		return
+	}
+	msg(os.Stdout, "ERROR", fmtstring, args...)
+}
+
 // fatal out
 func Fatal(fmtstring string, args ...interface{}) {
 	msg(os.Stderr, "FATAL", fmtstring, args...)
