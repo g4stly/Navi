@@ -85,6 +85,5 @@ func (self *database) SaveSlice(tableName string, slice []string) (error) {
 			return err
 		}
 	}
-
 	return nil
 }
