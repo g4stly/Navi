@@ -38,6 +38,21 @@ func (self *Bot) parseMessage(message *discordgo.Message) {
 	}
 
 	// assert first character is the command prefix, and the second character is not
+	argc, argv := parseArguments(msg[1:])
+
+	// check for hotwords by module before parsing for commands asynchronously
+	for _, mod := range self.Modules {
+		for _, word := range argv {
+			if cmdstring, ok := mod.HotWords[word]; ok {
+				// have to take care not to fall into infinite loop
+				message.Content = cmdstring
+				self.parseMessage(message)
+				common.Log("%s (%s) hotword %s;", message.Author.Username, message.Author.ID, word)
+				return
+			}
+		}
+	}
+
 	if msg[0] != commandPrefix {
 		return
 	}
@@ -47,8 +62,6 @@ func (self *Bot) parseMessage(message *discordgo.Message) {
 
 	var err error
 	var response string
-	argc, argv := parseArguments(msg[1:])
-
 	// log command attempts just in case snoopy tries to hack me
 	common.Log("%s (%s) said %s;\n\texecuting [%s]", message.Author.Username, message.Author.ID, msg, argv[0])
 

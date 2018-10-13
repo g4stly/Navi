@@ -135,6 +135,7 @@ func Init(navi *bot.Bot) bot.Module {
 			names:   chooseNames,
 			usage:   chooseUsage,
 			execute: chooseExec}}
+	module.HotWords = make(map[string]string)
 	return module
 }
 

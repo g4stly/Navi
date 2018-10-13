@@ -148,6 +148,7 @@ func Init(navi *bot.Bot) bot.Module {
 			names:   laffinNames,
 			usage:   laffinUsage,
 			execute: laffinExec}}
+	module.HotWords = make(map[string]string)
 	return module
 }
 

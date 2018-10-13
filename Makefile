@@ -3,7 +3,8 @@ BOT	= bot/bot.go bot/callbacks.go bot/database.go
 CORE	= modules/navi-core/navi-core.so
 LUCK	= modules/navi-luck/navi-luck.so
 REACT	= modules/navi-reaction/navi-reaction.so
-MODULES	= $(CORE) $(LUCK) $(REACT)
+HOTWORDS = modules/navi-hotwords/navi-hotwords.so
+MODULES	= $(CORE) $(LUCK) $(REACT) $(HOTWORDS)
 
 all: $(TARGET) $(MODULES)
 
@@ -14,6 +15,8 @@ $(CORE): $(CORE:%.so=%.go) $(BOT)
 $(LUCK): $(LUCK:%.so=%.go) $(BOT)
 	go build -buildmode=plugin -o $@ $(@:%.so=%.go)
 $(REACT): $(REACT:%.so=%.go) $(BOT)
+	go build -buildmode=plugin -o $@ $(@:%.so=%.go)
+$(HOTWORDS): $(HOTWORDS:%.so=%.go) $(BOT)
 	go build -buildmode=plugin -o $@ $(@:%.so=%.go)
 
 .PHONY: clean test
