@@ -2,8 +2,8 @@ TARGET 	= main
 BOT	= bot/bot.go bot/callbacks.go bot/database.go
 CORE	= modules/navi-core/navi-core.so
 LUCK	= modules/navi-luck/navi-luck.so
-REACT	= modules/navi-reaction/navi-reaction.so
-MODULES	= $(CORE) $(LUCK) $(REACT)
+REACTION= modules/navi-reaction/navi-reaction.so
+MODULES	= $(CORE) $(LUCK) $(REACTION)
 
 all: $(TARGET) $(MODULES)
 
@@ -13,7 +13,7 @@ $(CORE): $(CORE:%.so=%.go) $(BOT)
 	go build -buildmode=plugin -o $@ $(@:%.so=%.go)
 $(LUCK): $(LUCK:%.so=%.go) $(BOT)
 	go build -buildmode=plugin -o $@ $(@:%.so=%.go)
-$(REACT): $(REACT:%.so=%.go) $(BOT)
+$(REACTION): $(REACTION:%.so=%.go) $(BOT)
 	go build -buildmode=plugin -o $@ $(@:%.so=%.go)
 
 .PHONY: clean test
