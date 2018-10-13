@@ -259,6 +259,12 @@ func Init(navi *bot.Bot) bot.Module {
 			names:   quitNames,
 			usage:   quitUsage,
 			execute: quitExec}}
+	module.HotWords = make(map[string]string)
+	module.HotWords["nya"] = ".echo owo"
+	module.HotWords["nyaa"] = ".echo ow0"
+	module.HotWords["nyaaa"] = ".echo 0wo"
+	module.HotWords["nyaaaa"] = ".echo 0w0"
+	module.HotWords["nyaaaaa"] = ".echo 0w0"
 	return module
 }
 

@@ -74,15 +74,15 @@ func chooseExec(navi *bot.Bot, author *discordgo.User, argc int, argv []string) 
 
 	index := 0
 	for i := 1; i < argc; i++ {
+		if argv[i] == "or" {
+			index = i
+			continue
+		}
 		replacement, ok := perspective[argv[i]]
 		if !ok {
 			continue
 		}
 		argv[i] = replacement
-
-		if argv[i] == "or" {
-			index = i
-		}
 	}
 	if index < 2 { // needs to atleast be the third
 		return chooseUsage(argv[0]), nil
@@ -135,6 +135,7 @@ func Init(navi *bot.Bot) bot.Module {
 			names:   chooseNames,
 			usage:   chooseUsage,
 			execute: chooseExec}}
+	module.HotWords = make(map[string]string)
 	return module
 }
 

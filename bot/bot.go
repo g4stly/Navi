@@ -32,6 +32,7 @@ type Command interface {
 type Module struct {
 	Name     string
 	Commands []Command
+	HotWords map[string]string
 }
 
 // variables
